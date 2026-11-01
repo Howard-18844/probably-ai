@@ -95,7 +95,7 @@ export default {
             ...persona.examples,
             { role: "user", content: message },
           ],
-          max_tokens: 100,
+          max_tokens: 250, // Chinese needs ~1-2 tokens per character, so 100 cut replies off
           temperature: 0.8,
         });
         const joke = extractText(out);
