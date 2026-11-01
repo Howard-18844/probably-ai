@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-page">
+  <section id="login" class="center" hidden>
+    <h1>Admin</h1>
+    <p class="muted">Sign in with the Google account set as ADMIN_EMAIL.</p>
+    <button id="signIn" type="button">Sign in with Google</button>
+    <p id="loginError" class="error"></p>
+  </section>
+
+  <section id="denied" class="center" hidden>
+    <h1>Not allowed</h1>
+    <p class="muted">This Google account is not the admin account.</p>
+    <button id="signOutDenied" class="ghost" type="button">Sign out</button>
+  </section>
+
+  <div id="app" hidden>
+    <header class="topbar">
+      <div class="brand"><span class="logo">◐</span><span>Admin</span></div>
+      <div class="settings">
+        <label><input type="checkbox" id="autoReply"> Auto-reply</label>
+        <label>after <input type="number" id="delay" min="2" max="120" value="8"> sec</label>
+      </div>
+      <button id="signOut" class="ghost" type="button">Sign out</button>
+    </header>
+
+    <div id="demoBanner" class="banner" hidden>
+      Demo mode: not connected to Firebase yet. Open the chat page (index.html) in this same browser to try it.
+    </div>
+
+    <div class="split">
+      <aside id="chatList" class="chat-list"></aside>
+      <section class="convo">
+        <p id="convoEmpty" class="empty">Pick a chat on the left to read it and reply.</p>
+        <div id="convoMessages" class="messages" hidden></div>
+        <form id="replyForm" class="composer" hidden>
+          <textarea id="replyInput" rows="2" maxlength="1000" placeholder="Reply as the AI…" aria-label="Your reply"></textarea>
+          <button type="submit">Send</button>
+        </form>
+        <p id="replyError" class="error"></p>
+      </section>
+    </div>
+  </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

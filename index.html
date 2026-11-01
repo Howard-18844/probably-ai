@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Probably AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="chat-page">
+  <header class="topbar">
+    <div class="brand"><span class="logo">◐</span><span id="siteName">Probably AI</span></div>
+    <button id="newChat" class="ghost" type="button">New chat</button>
+  </header>
+
+  <div id="demoBanner" class="banner" hidden>
+    Demo mode: not connected to Firebase yet. Messages stay in this browser only.
+  </div>
+
+  <main id="messages" class="messages" aria-live="polite"></main>
+
+  <form id="form" class="composer">
+    <textarea id="input" rows="1" maxlength="1000" placeholder="Ask me anything…" aria-label="Your message"></textarea>
+    <button type="submit" id="send">Send</button>
+  </form>
+
+  <footer class="fineprint">
+    Parody site made for fun. Answers come from silly scripts and sometimes a real human.
+    Please don't share anything private.
+  </footer>
+
+  <script type="module" src="chat.js"></script>
+</body>
+</html>
