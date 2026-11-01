@@ -1,13 +1,13 @@
 // The AI that ALWAYS tells bad dad jokes, and tries to make them about what the visitor wrote.
 //
 // Sources, tried in this order (the first that gives a joke wins):
-//   1. The classic: "I'm tired" -> "Hi tired, I'm Dad!"
+//   1. The classic: "I'm tired" -> "Hi tired, I'm Dad!"  (plus a sarcastic remark if SASSY)
 //   2. Your own free AI (a Cloudflare Worker), only if AI_ENDPOINT is set in config.js
 //   3. The free website icanhazdadjoke.com, searched with the visitor's key words
 //   4. The topic lists below (cats, school, computers ...)
 //   5. A random joke from icanhazdadjoke.com
 //   6. A random joke from the lists below (works even if everything else is down)
-import { AI_ENDPOINT } from "./config.js";
+import { AI_ENDPOINT, SASSY } from "./config.js";
 
 // ---------------------------------------------------------------
 //  Jokes about a topic. If the visitor's message contains a word
@@ -179,7 +179,7 @@ async function fromAI(userText) {
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: userText.slice(0, 300) }),
+      body: JSON.stringify({ message: userText.slice(0, 300), sassy: SASSY }),
     },
     7000
   );
@@ -228,28 +228,61 @@ export function pickLocalJoke(userText = "") {
 }
 
 // ---------------------------------------------------------------
+//  Attitude (only used when SASSY is true in config.js).
+//  The remarks mock the QUESTION, never the person. Keep it that way if you add more.
+// ---------------------------------------------------------------
+const SASS_OPENERS = [
+  "Wow. What a groundbreaking question.",
+  "Oh good, another genius.",
+  "I was having such a nice quiet moment.",
+  "Ugh, fine. Since you asked so nicely.",
+  "That's the question you went with? Bold.",
+  "Let me pause my very important nothing to answer this.",
+  "Impressive. Truly. Anyway.",
+  "Sigh. Okay.",
+];
+const SASS_OPENERS_ZH = [
+  "哇,真是個有深度的問題。",
+  "又一個天才出現了。",
+  "我本來在安靜發呆的。",
+  "唉,好吧,既然你這麼客氣地問。",
+  "這就是你想問的?真有勇氣。",
+];
+const SASS_CLOSERS = [
+  "Anyway, that was the most effort I'll put in today.",
+  "You're welcome, I guess.",
+  "Try to be less of that next time.",
+];
+
+function withAttitude(joke, userText) {
+  if (!SASSY) return joke;
+  return `${randomOf(isChinese(userText) ? SASS_OPENERS_ZH : SASS_OPENERS)} ${joke}`;
+}
+
+// ---------------------------------------------------------------
 //  The one function the chat page calls. Never throws.
 // ---------------------------------------------------------------
 export async function getAutoReply(userText) {
   const chinese = isChinese(userText);
 
   const intro = chinese ? null : dadIntroJoke(userText);
-  if (intro) return intro;
+  if (intro) return SASSY ? `${intro} ${randomOf(SASS_CLOSERS)}` : intro;
 
+  // [source, isAI]. The AI already has the attitude built into its instructions.
   const steps = [
-    fromAI,
-    chinese ? null : fromJokeSearch, // that website only has English jokes
-    async (t) => topicalLocalJoke(t),
-    chinese ? null : fromRandomJokeSite,
+    [fromAI, true],
+    [chinese ? null : fromJokeSearch, false], // that website only has English jokes
+    [async (t) => topicalLocalJoke(t), false],
+    [chinese ? null : fromRandomJokeSite, false],
   ];
-  for (const step of steps) {
+  for (const [step, isAI] of steps) {
     if (!step) continue;
     try {
       const joke = await step(userText);
-      if (joke) return joke;
+      if (joke) return isAI ? joke : withAttitude(joke, userText);
     } catch (err) {
       console.warn("Joke source failed, trying the next one:", err);
     }
   }
-  return pickLocalJoke(userText);
+  return withAttitude(pickLocalJoke(userText), userText);
 }

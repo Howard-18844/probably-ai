@@ -15,6 +15,11 @@ export const ADMIN_EMAIL = "davidho0099@gmail.com";
 // website, then from a built-in list).
 export const AI_ENDPOINT = "https://probably-ai-jokes.ggwpyee87.workers.dev";
 
+// Attitude of the AI.
+// true  = sarcastic: it roasts the visitor's QUESTION, then tells a bad dad joke.
+// false = polite dad jokes only.
+export const SASSY = true;
+
 // OPTIONAL: talk to visitors from Discord (see DISCORD-SETUP.md).
 // Example: "https://probably-ai-discord.yourname.workers.dev/notify"
 // Leave it as "" to switch Discord off.
