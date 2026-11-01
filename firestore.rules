@@ -9,12 +9,18 @@ service cloud.firestore {
           && request.auth.token.email == 'your-email@gmail.com';
     }
 
+    // The Discord Worker signs in as this special user (see DISCORD-SETUP.md).
+    // CHANGE THIS to the "User UID" of the bot user you create in Firebase.
+    function isBot() {
+      return request.auth != null && request.auth.uid == 'PASTE-BOT-USER-UID-HERE';
+    }
+
     // One document per visitor chat. The chat id is a long random code,
     // so only the visitor who owns it (and you) know where it is.
     match /chats/{chatId} {
       allow get: if true;
       allow list: if isAdmin();               // only you can browse all chats
-      allow create, update: if (isAdmin() || request.resource.data.lastFrom in ['user', 'auto'])
+      allow create, update: if (isAdmin() || isBot() || request.resource.data.lastFrom in ['user', 'auto'])
           && request.resource.data.keys().hasOnly(['lastAt', 'lastText', 'lastFrom', 'needsReply'])
           && request.resource.data.lastText is string
           && request.resource.data.lastText.size() <= 80;
@@ -24,7 +30,7 @@ service cloud.firestore {
         allow read: if true;
         // Visitors may only write "user" messages (and the scripted "auto" ones).
         // Only YOU can write "human" messages.
-        allow create: if (isAdmin() || request.resource.data.from in ['user', 'auto'])
+        allow create: if (isAdmin() || isBot() || request.resource.data.from in ['user', 'auto'])
             && request.resource.data.keys().hasOnly(['from', 'text', 'ts'])
             && request.resource.data.text is string
             && request.resource.data.text.size() <= 1000;

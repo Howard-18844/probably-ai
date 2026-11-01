@@ -2,6 +2,7 @@
 import { SITE_NAME } from "./config.js";
 import { createBackend } from "./backend.js";
 import { getAutoReply } from "./autoreplies.js";
+import { notifyDiscord } from "./discord.js";
 
 const $ = (id) => document.getElementById(id);
 const messagesEl = $("messages");
@@ -113,6 +114,7 @@ async function send() {
   input.style.height = "auto";
   try {
     await backend.sendMessage(chatId, "user", text);
+    notifyDiscord(chatId, text);
   } catch (err) {
     console.error(err);
     messagesEl.appendChild(bubble("bot error", "Connection problem. Please try again."));

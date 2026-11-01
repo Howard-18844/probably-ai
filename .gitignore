@@ -1,2 +1,7 @@
 # Don't push notes/instructions to GitHub
 *.md
+
+# Never push secrets (saved tokens, passwords, ids, env files)
+*.txt
+.env
+.env.*
