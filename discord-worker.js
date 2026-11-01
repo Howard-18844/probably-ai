@@ -15,7 +15,7 @@
 //   BOT_PASSWORD        (secret)  password of the Firebase "bot" user
 
 // Only web pages on these addresses may call /notify.
-const ALLOWED_ORIGINS = ["https://howard-18844.github.io", "http://localhost:8000"];
+const ALLOWED_ORIGINS = ["https://howard-18844.github.io", "http://localhost:8000", "https://probablyai.netlify.app"];
 
 const DISCORD_API = "https://discord.com/api/v10";
 const CHAT_ID = /^[0-9a-f]{32}$/; // chat ids are 32 random hex characters
@@ -165,7 +165,7 @@ async function handleDiscord(request, env, ctx) {
           {
             type: 1,
             components: [
-              { type: 4, custom_id: "text", label: "Your reply (the visitor sees this)", style: 2, min_length: 1, max_length: 1000, required: true },
+              { type: 4, custom_id: "text", label: "Your reply (the visitor sees this)", style: 2, min_length: 1, max_length: 4000, required: true },
             ],
           },
         ],
@@ -177,7 +177,7 @@ async function handleDiscord(request, env, ctx) {
   if (interaction.type === 5 && customId.startsWith("modal:")) {
     if (!isOwner) return ephemeral("Only the site owner can reply.");
     const chatId = customId.slice("modal:".length);
-    const text = String(flattenInputs(interaction.data?.components)[0]?.value || "").trim().slice(0, 1000);
+    const text = String(flattenInputs(interaction.data?.components)[0]?.value || "").trim().slice(0, 4000);
     if (!CHAT_ID.test(chatId) || !text) return ephemeral("Empty reply, nothing was sent.");
     // Discord wants an answer within 3 seconds, so say "working on it" now and finish afterwards.
     ctx.waitUntil(sendReplyAndConfirm(env, interaction, chatId, text));
@@ -191,7 +191,7 @@ async function sendReplyAndConfirm(env, interaction, chatId, text) {
   let content;
   try {
     await writeHumanReply(env, chatId, text);
-    content = `↪ **You** → Visitor ${chatId.slice(0, 4)}: ${text}`.slice(0, 1990);
+    const shown = text.length > 1800 ? text.slice(0, 1800) + "… (shortened here, the visitor sees all of it)" : text; content = `↪ **You** → Visitor ${chatId.slice(0, 4)}: ${shown}`.slice(0, 1990);
   } catch (err) {
     content = `❌ Could not send the reply: ${String(err && err.message ? err.message : err).slice(0, 300)}`;
   }

@@ -33,7 +33,7 @@ service cloud.firestore {
         allow create: if (isAdmin() || isBot() || request.resource.data.from in ['user', 'auto'])
             && request.resource.data.keys().hasOnly(['from', 'text', 'ts'])
             && request.resource.data.text is string
-            && request.resource.data.text.size() <= 1000;
+            && (request.resource.data.text.size() <= 1000 || ((isAdmin() || isBot()) && request.resource.data.text.size() <= 4000));
         allow update, delete: if isAdmin();
       }
     }

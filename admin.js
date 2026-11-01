@@ -85,7 +85,7 @@ function selectChat(id) {
 
 async function sendReply() {
   const input = $("replyInput");
-  const text = input.value.trim().slice(0, 1000);
+  const text = input.value.trim().slice(0, 4000);
   if (!text || !selected) return;
   input.value = "";
   try {

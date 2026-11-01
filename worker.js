@@ -3,7 +3,7 @@
 // for a dad joke and sends the joke back. See AI-SETUP.md for how to deploy it.
 
 // Only web pages on these addresses may use your Worker.
-const ALLOWED_ORIGINS = ["https://howard-18844.github.io", "http://localhost:8000"];
+const ALLOWED_ORIGINS = ["https://howard-18844.github.io", "http://localhost:8000", "https://probablyai.netlify.app"];
 
 // Tried in this order. If the first one is retired or fails, the next one is used.
 // Cloudflare retires old models now and then; see AI-SETUP.md if both stop working.
