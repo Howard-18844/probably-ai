@@ -9,6 +9,12 @@ export const SITE_NAME = "Probably AI";
 // (Also put it in firestore.rules - see README.md)
 export const ADMIN_EMAIL = "davidho0099@gmail.com";
 
+// OPTIONAL: the address of your free dad-joke AI (see AI-SETUP.md).
+// Example: "https://probably-ai-jokes.yourname.workers.dev"
+// Leave it as "" to skip it. The site still tells dad jokes (from a free joke
+// website, then from a built-in list).
+export const AI_ENDPOINT = "https://probably-ai-jokes.ggwpyee87.workers.dev";
+
 // Your Firebase web-app config (safe to be public; the rules protect your data).
 export const firebaseConfig = {
   apiKey: "AIzaSyAUZlxohUYnwJ8KSkvJ19zDGjYjLDEowog",

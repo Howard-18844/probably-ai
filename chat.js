@@ -1,7 +1,7 @@
 // The visitor's chat page.
 import { SITE_NAME } from "./config.js";
 import { createBackend } from "./backend.js";
-import { pickAutoReply } from "./autoreplies.js";
+import { getAutoReply } from "./autoreplies.js";
 
 const $ = (id) => document.getElementById(id);
 const messagesEl = $("messages");
@@ -28,6 +28,7 @@ let settings = { autoReply: true, delaySeconds: 8 };
 let messages = [];
 let timer = null;
 let timerFor = null; // id of the visitor message the timer belongs to
+let generating = null; // id of the visitor message we are currently fetching a joke for
 let unsubMessages = null;
 let lastSend = 0;
 
@@ -64,10 +65,18 @@ function arm(last) {
     timer = null;
     const current = messages[messages.length - 1];
     if (!current || current.id !== last.id || !settings.autoReply) return;
+    if (generating === last.id) return; // already fetching a joke for this message
+    generating = last.id;
     try {
-      await backend.sendMessage(chatId, "auto", pickAutoReply(last.text));
+      const joke = await getAutoReply(last.text);
+      // Getting a joke can take a few seconds. If you answered meanwhile, drop it.
+      const now = messages[messages.length - 1];
+      if (!now || now.id !== last.id || !settings.autoReply) return;
+      await backend.sendMessage(chatId, "auto", joke);
     } catch (err) {
       console.error(err);
+    } finally {
+      generating = null;
     }
   }, wait);
 }

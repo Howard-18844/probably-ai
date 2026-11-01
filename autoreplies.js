@@ -1,30 +1,37 @@
-// Silly scripted answers used when you are not replying live.
-// Add, remove or rewrite lines freely.
+// The AI that ALWAYS tells bad dad jokes.
+// Three sources are tried in this order, so you always get a joke:
+//   1. Your own free AI (a Cloudflare Worker) - only if AI_ENDPOINT is set in config.js
+//   2. The free website icanhazdadjoke.com (no account or key needed)
+//   3. The lists below (work even if the internet services are down)
+import { AI_ENDPOINT } from "./config.js";
+
 const ENGLISH = [
-  "Great question! Unfortunately my brain is buffering. Estimated time: 16 months.",
-  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-  "I would answer that, but I am legally required to take a nap first.",
-  "Error 418: I'm a teapot. Would you like a poem about teapots instead?",
-  "Let me consult my sources... my sources say \"ask someone else\".",
-  "Processing... 1%... 2%... 3%... (this may take a while)",
-  "As a large language model I would love to help. As a medium-sized one, I can only wave.",
-  "I asked another AI and it left me on read.",
-  "Sorry, the hamster that powers my servers is on a break.",
-  "Could you rephrase that as an interpretive dance? I find it easier.",
+  "I only know 25 letters of the alphabet. I don't know y.",
+  "Why don't eggs tell jokes? They'd crack each other up.",
+  "I used to hate facial hair, but then it grew on me.",
+  "What do you call a fake noodle? An impasta.",
+  "I'm reading a book about anti-gravity. It's impossible to put down.",
+  "Why did the scarecrow win an award? He was outstanding in his field.",
+  "I would tell you a construction joke, but I'm still working on it.",
+  "What do you call cheese that isn't yours? Nacho cheese.",
+  "Did you hear about the claustrophobic astronaut? He just needed a little space.",
+  "I'm afraid for the calendar. Its days are numbered.",
+  "Why can't you trust stairs? They're always up to something.",
+  "What did the ocean say to the beach? Nothing, it just waved.",
 ];
 
 const CHINESE = [
-  "好問題!我的大腦正在緩衝中,預計需要 16 個月。",
-  "啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊",
-  "我本來想回答,但我依法必須先睡個午覺。",
-  "正在思考中... 1%... 2%... 3%...(可能要等一陣子)",
-  "我問了另一個 AI,牠已讀不回。",
-  "抱歉,負責驅動伺服器的倉鼠正在休息。",
+  "為什麼數學課本很傷心?因為它有太多問題。",
+  "為什麼小明帶著梯子去上學?因為他要上高中。",
+  "什麼東西越洗越髒?水。",
+  "為什麼電腦很怕冷?因為它開了太多視窗。",
+  "我昨天買了一台時光機,不過要等到明天才會送到。",
 ];
 
 let lastIndex = -1;
 
-export function pickAutoReply(userText) {
+// Picks a joke from the built-in lists, never the same one twice in a row.
+export function pickLocalJoke(userText = "") {
   const list = /[㐀-鿿]/.test(userText) ? CHINESE : ENGLISH;
   let i;
   do {
@@ -32,4 +39,59 @@ export function pickAutoReply(userText) {
   } while (i === lastIndex && list.length > 1);
   lastIndex = i;
   return list[i];
+}
+
+async function fetchWithTimeout(url, options, ms) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function clean(text) {
+  if (typeof text !== "string") return null;
+  const t = text.replace(/\s+/g, " ").trim();
+  return t ? t.slice(0, 400) : null;
+}
+
+async function fromAI(userText) {
+  if (!AI_ENDPOINT) return null;
+  const res = await fetchWithTimeout(
+    AI_ENDPOINT,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userText.slice(0, 300) }),
+    },
+    7000
+  );
+  if (!res.ok) return null;
+  const data = await res.json();
+  return clean(data.reply);
+}
+
+async function fromDadJokeSite() {
+  const res = await fetchWithTimeout("https://icanhazdadjoke.com/", { headers: { Accept: "application/json" } }, 4000);
+  if (!res.ok) return null;
+  const data = await res.json();
+  return clean(data.joke);
+}
+
+// Returns a bad dad joke. Never throws: the last fallback is the local list.
+export async function getAutoReply(userText) {
+  const hasChinese = /[㐀-鿿]/.test(userText);
+  const sources = [fromAI];
+  if (!hasChinese) sources.push(fromDadJokeSite); // that website only has English jokes
+  for (const source of sources) {
+    try {
+      const joke = await source(userText);
+      if (joke) return joke;
+    } catch (err) {
+      console.warn("Joke source failed, trying the next one:", err);
+    }
+  }
+  return pickLocalJoke(userText);
 }
